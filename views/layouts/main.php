@@ -248,7 +248,9 @@
                     </a>
                 </li>
 
+                <?php if (SessionManager::hasPermission('ventas') || SessionManager::hasPermission('cotizaciones') || SessionManager::hasPermission('cuentas_cobrar')): ?>
                 <li class="menu-header">Ventas</li>
+                <?php if (SessionManager::hasPermission('ventas')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/ventas/pos.php" class="menu-link">
                         <i class="bi bi-cart-plus"></i>
@@ -261,32 +263,44 @@
                         <span>Listado de Ventas</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('cotizaciones')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/cotizaciones/index.php" class="menu-link">
                         <i class="bi bi-file-text"></i>
                         <span>Cotizaciones</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('cuentas_cobrar')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/cuentasxcobrar/index.php" class="menu-link">
                         <i class="bi bi-wallet2"></i>
                         <span>Cuentas por Cobrar</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php endif; ?>
 
+                <?php if (SessionManager::hasPermission('almacen') || SessionManager::hasPermission('compras') || SessionManager::hasPermission('proveedores')): ?>
                 <li class="menu-header">Inventario</li>
+                <?php if (SessionManager::hasPermission('almacen')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/almacen/index.php" class="menu-link">
                         <i class="bi bi-box-seam"></i>
                         <span>Productos</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('compras')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/compras/index.php" class="menu-link">
                         <i class="bi bi-bag-plus"></i>
                         <span>Compras</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('almacen')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/kardex/index.php" class="menu-link">
                         <i class="bi bi-clock-history"></i>
@@ -299,52 +313,72 @@
                         <span>Categorías</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('proveedores')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/proveedores/index.php" class="menu-link">
                         <i class="bi bi-truck"></i>
                         <span>Proveedores</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php endif; ?>
 
+                <?php if (SessionManager::hasPermission('clientes') || SessionManager::hasPermission('caja') || SessionManager::hasPermission('gastos')): ?>
                 <li class="menu-header">Gestión</li>
+                <?php if (SessionManager::hasPermission('clientes')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/clientes/index.php" class="menu-link">
                         <i class="bi bi-people"></i>
                         <span>Clientes</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('caja')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/caja/index.php" class="menu-link">
                         <i class="bi bi-cash-coin"></i>
                         <span>Apertura/Cierre Caja</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('gastos')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/gastos/index.php" class="menu-link">
                         <i class="bi bi-graph-down-arrow"></i>
                         <span>Gastos y Ganancias</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php endif; ?>
 
+                <?php if (SessionManager::hasPermission('usuarios') || SessionManager::hasPermission('roles') || SessionManager::hasPermission('configuracion')): ?>
                 <li class="menu-header">Administración</li>
+                <?php if (SessionManager::hasPermission('usuarios')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/usuarios/index.php" class="menu-link">
                         <i class="bi bi-person-gear"></i>
                         <span>Usuarios</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('roles')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/roles/index.php" class="menu-link">
                         <i class="bi bi-shield-lock"></i>
                         <span>Roles y Permisos</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php if (SessionManager::hasPermission('configuracion')): ?>
                 <li>
                     <a href="<?php echo SITE_URL; ?>/views/configuracion/index.php" class="menu-link">
                         <i class="bi bi-gear"></i>
                         <span>Configuración</span>
                     </a>
                 </li>
+                <?php endif; ?>
+                <?php endif; ?>
 
                 <li class="menu-header">Sesión</li>
                 <li>
