@@ -9,7 +9,7 @@
     $ventaRepo = new VentaRepository();
     $userId    = SessionManager::getUserId();
 
-    $caja      = $repo->getCajaAbierta($userId);
+    $caja      = $repo->getAnyCajaAbierta();
     $historial = $repo->findAllWithUser(['usuario_id' => $userId], 1, 5);
 
     // Si hay caja abierta, obtener ventas del día
@@ -50,8 +50,10 @@
                     <i class="bi bi-check-circle me-2"></i>Caja Abierta
                 </h5>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <small style="font-size: 0.75rem; opacity: 0.9;"><?php echo formatDateTime($caja->fecha_apertura); ?></small>
-                    <span class="badge bg-light text-dark" style="font-size: 0.7rem;">ID: #<?php echo $caja->id; ?></span>
+                    <small
+                        style="font-size: 0.75rem; opacity: 0.9;"><?php echo formatDateTime($caja->fecha_apertura); ?></small>
+                    <span class="badge bg-light text-dark" style="font-size: 0.7rem;">ID:
+                        #<?php echo $caja->id; ?></span>
                 </div>
             </div>
         </div>
@@ -60,7 +62,8 @@
                 <div class="col-6">
                     <div class="card bg-light h-100" style="border-radius: 8px;">
                         <div class="card-body text-center p-2">
-                            <div class="fw-bold text-success" style="font-size: 0.95rem;"><?php echo formatCurrency($caja->monto_apertura); ?></div>
+                            <div class="fw-bold text-success" style="font-size: 0.95rem;">
+                                <?php echo formatCurrency($caja->monto_apertura); ?></div>
                             <div class="text-muted" style="font-size: 0.7rem;">Monto Apertura</div>
                         </div>
                     </div>
@@ -68,7 +71,8 @@
                 <div class="col-6">
                     <div class="card bg-light h-100" style="border-radius: 8px;">
                         <div class="card-body text-center p-2">
-                            <div class="fw-bold text-primary" style="font-size: 0.95rem;"><?php echo formatCurrency($caja->total_ventas); ?></div>
+                            <div class="fw-bold text-primary" style="font-size: 0.95rem;">
+                                <?php echo formatCurrency($caja->total_ventas); ?></div>
                             <div class="text-muted" style="font-size: 0.7rem;">Total Ventas</div>
                         </div>
                     </div>
@@ -76,7 +80,8 @@
                 <div class="col-6">
                     <div class="card bg-light h-100" style="border-radius: 8px;">
                         <div class="card-body text-center p-2">
-                            <div class="fw-bold text-info" style="font-size: 0.95rem;"><?php echo formatCurrency($caja->total_efectivo); ?></div>
+                            <div class="fw-bold text-info" style="font-size: 0.95rem;">
+                                <?php echo formatCurrency($caja->total_efectivo); ?></div>
                             <div class="text-muted" style="font-size: 0.7rem;">Efectivo</div>
                         </div>
                     </div>
@@ -84,7 +89,8 @@
                 <div class="col-6">
                     <div class="card bg-light h-100" style="border-radius: 8px;">
                         <div class="card-body text-center p-2">
-                            <div class="fw-bold text-warning" style="font-size: 0.95rem;"><?php echo formatCurrency($caja->total_tarjeta); ?></div>
+                            <div class="fw-bold text-warning" style="font-size: 0.95rem;">
+                                <?php echo formatCurrency($caja->total_tarjeta); ?></div>
                             <div class="text-muted" style="font-size: 0.7rem;">Tarjetas</div>
                         </div>
                     </div>
@@ -92,10 +98,12 @@
             </div>
 
             <div class="mt-3" style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="cierre.php" class="btn btn-danger" style="font-size: 0.9rem; padding: 10px; border-radius: 8px;">
+                <a href="cierre.php" class="btn btn-danger"
+                    style="font-size: 0.9rem; padding: 10px; border-radius: 8px;">
                     <i class="bi bi-lock me-2"></i>Cerrar Caja
                 </a>
-                <a href="movimientos.php?caja_id=<?php echo $caja->id; ?>" class="btn btn-info" style="font-size: 0.9rem; padding: 10px; border-radius: 8px;">
+                <a href="movimientos.php?caja_id=<?php echo $caja->id; ?>" class="btn btn-info"
+                    style="font-size: 0.9rem; padding: 10px; border-radius: 8px;">
                     <i class="bi bi-list-ul me-2"></i>Ver Movimientos
                 </a>
             </div>
@@ -140,7 +148,8 @@
                             </td>
                             <td><?php echo date('H:i', strtotime($venta->fecha)); ?></td>
                             <td class="text-center">
-                                <a href="../ventas/ticket.php?id=<?php echo $venta->id; ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                <a href="../ventas/ticket.php?id=<?php echo $venta->id; ?>"
+                                    class="btn btn-sm btn-secondary" target="_blank">
                                     <i class="bi bi-receipt"></i>
                                 </a>
                             </td>
@@ -200,12 +209,13 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="badge bg-<?php echo $hist->estado === 'ABIERTA' ? 'success' : 'secondary'; ?>">
+                                <span
+                                    class="badge bg-<?php echo $hist->estado === 'ABIERTA' ? 'success' : 'secondary'; ?>">
                                     <?php echo $hist->estado; ?>
                                 </span>
                             </td>
                             <td>
-                                <a href="resumen.php?id=<?php echo $hist->id; ?>" class="btn btn-sm btn-info">
+                                <a href="movimientos.php?caja_id=<?php echo $hist->id; ?>" class="btn btn-sm btn-info">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
                             </td>
@@ -219,69 +229,82 @@
 </div>
 
 <style>
-    /* Responsive styles */
-    @media (max-width: 768px) {
-        .container-fluid h1.h3 {
-            font-size: 1.3rem;
-        }
-        .card-header h5 {
-            font-size: 1rem;
-        }
-        .row.g-4 > .col-md-3 {
-            width: 50% !important;
-            padding: 5px !important;
-        }
-        .row.g-4 .card-body {
-            padding: 0.75rem !important;
-        }
-        .row.g-4 h4 {
-            font-size: 1.1rem;
-        }
-        .row.g-4 p {
-            font-size: 0.8rem;
-        }
-        .d-flex.gap-2 {
-            flex-direction: column;
-            gap: 10px !important;
-        }
-        .d-flex.gap-2 .btn-lg {
-            font-size: 0.9rem;
-            padding: 8px 15px !important;
-        }
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        table {
-            font-size: 0.8rem;
-            min-width: 700px;
-        }
-        table th,
-        table td {
-            padding: 6px 4px;
-            white-space: nowrap;
-        }
-        .row > .col-md-3.mb-2 {
-            width: 50% !important;
-        }
+/* Responsive styles */
+@media (max-width: 768px) {
+    .container-fluid h1.h3 {
+        font-size: 1.3rem;
     }
 
-    @media (max-width: 576px) {
-        .container-fluid h1.h3 {
-            font-size: 1.1rem;
-        }
-        .d-flex.justify-content-between.align-items-center {
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-start !important;
-        }
-        .row > .col-md-3.mb-2 {
-            width: 100% !important;
-        }
+    .card-header h5 {
+        font-size: 1rem;
     }
+
+    .row.g-4>.col-md-3 {
+        width: 50% !important;
+        padding: 5px !important;
+    }
+
+    .row.g-4 .card-body {
+        padding: 0.75rem !important;
+    }
+
+    .row.g-4 h4 {
+        font-size: 1.1rem;
+    }
+
+    .row.g-4 p {
+        font-size: 0.8rem;
+    }
+
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 10px !important;
+    }
+
+    .d-flex.gap-2 .btn-lg {
+        font-size: 0.9rem;
+        padding: 8px 15px !important;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        font-size: 0.8rem;
+        min-width: 700px;
+    }
+
+    table th,
+    table td {
+        padding: 6px 4px;
+        white-space: nowrap;
+    }
+
+    .row>.col-md-3.mb-2 {
+        width: 50% !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid h1.h3 {
+        font-size: 1.1rem;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+
+    .row>.col-md-3.mb-2 {
+        width: 100% !important;
+    }
+}
 </style>
 
 <?php
     $content = ob_get_clean();
-    require_once dirname(__DIR__) . '/layouts/main.php';
+require_once dirname(__DIR__) . '/layouts/main.php';
 renderLayout('Caja', $content);

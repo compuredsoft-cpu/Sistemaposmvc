@@ -18,8 +18,8 @@
     $totalVentasHoy  = $statsHoy['total_ventas'] ?? 0;
     $totalVendidoHoy = $statsHoy['total_vendido'] ?? 0;
 
-    // Verificar caja abierta
-    $cajaAbierta = $cajaRepo->getCajaAbierta(SessionManager::getUserId());
+    // Verificar caja abierta (cualquiera, no solo la del usuario)
+    $cajaAbierta = $cajaRepo->getAnyCajaAbierta();
 
     // Alertas de stock
     $alertasStock = $productoRepo->getStockAlerts();
@@ -46,7 +46,11 @@
             <span class="text-muted me-3">
                 <i class="bi bi-calendar me-1"></i><?php echo date('d/m/Y'); ?>
             </span>
-            <?php if (! $cajaAbierta): ?>
+            <?php if ($cajaAbierta): ?>
+            <a href="<?php echo SITE_URL; ?>/views/caja/cierre.php" class="btn btn-danger">
+                <i class="bi bi-lock me-2"></i>Cerrar Caja
+            </a>
+            <?php else: ?>
             <a href="<?php echo SITE_URL; ?>/views/caja/apertura.php" class="btn btn-success">
                 <i class="bi bi-unlock me-2"></i>Abrir Caja
             </a>
