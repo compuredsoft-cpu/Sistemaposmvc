@@ -1,56 +1,60 @@
 <?php
-/**
+    /**
  * Gestión de Permisos del Rol
  */
-require_once dirname(__DIR__, 2) . '/config/config.php';
-SessionManager::requirePermission('usuarios');
+    require_once dirname(__DIR__, 2) . '/config/config.php';
+    SessionManager::requirePermission('usuarios');
 
-$repo = new RolRepository();
+    $repo = new RolRepository();
 
-// Lista de permisos disponibles organizados por categoría
-$permisosPorCategoria = [
-    'Ventas y Comercio' => [
-        'ventas' => ['icon' => 'bi-cart', 'label' => 'Ventas', 'desc' => 'Crear y gestionar ventas, POS'],
-        'cotizaciones' => ['icon' => 'bi-file-text', 'label' => 'Cotizaciones', 'desc' => 'Crear y enviar cotizaciones'],
-        'cuentasxcobrar' => ['icon' => 'bi-cash-stack', 'label' => 'Cuentas por Cobrar', 'desc' => 'Gestionar créditos y pagos'],
-        'clientes' => ['icon' => 'bi-people', 'label' => 'Clientes', 'desc' => 'Gestionar clientes'],
+    // Lista de permisos disponibles organizados por categoría
+    $permisosPorCategoria = [
+    'Ventas y Comercio'    => [
+        'ventas'         => ['icon' => 'bi-cart', 'label' => 'Ventas', 'desc' => 'Crear y gestionar ventas, POS'],
+        'cotizaciones'   => ['icon' => 'bi-file-text', 'label' => 'Cotizaciones', 'desc' => 'Crear y enviar cotizaciones'],
+        'cuentas_cobrar' => ['icon' => 'bi-cash-stack', 'label' => 'Cuentas por Cobrar', 'desc' => 'Gestionar créditos y pagos'],
+        'clientes'       => ['icon' => 'bi-people', 'label' => 'Clientes', 'desc' => 'Gestionar clientes'],
     ],
     'Inventario y Compras' => [
-        'almacen' => ['icon' => 'bi-box-seam', 'label' => 'Almacén', 'desc' => 'Gestionar productos y stock'],
-        'compras' => ['icon' => 'bi-bag', 'label' => 'Compras', 'desc' => 'Crear y gestionar compras'],
+        'almacen'     => ['icon' => 'bi-box-seam', 'label' => 'Almacén', 'desc' => 'Gestionar productos y stock'],
+        'compras'     => ['icon' => 'bi-bag', 'label' => 'Compras', 'desc' => 'Crear y gestionar compras'],
         'proveedores' => ['icon' => 'bi-truck', 'label' => 'Proveedores', 'desc' => 'Gestionar proveedores'],
-        'categorias' => ['icon' => 'bi-tags', 'label' => 'Categorías', 'desc' => 'Gestionar categorías de productos'],
+        'categorias'  => ['icon' => 'bi-tags', 'label' => 'Categorías', 'desc' => 'Gestionar categorías de productos'],
     ],
-    'Administración' => [
-        'usuarios' => ['icon' => 'bi-person-gear', 'label' => 'Usuarios', 'desc' => 'Gestionar usuarios'],
+    'Gestión'              => [
+        'caja'   => ['icon' => 'bi-cash-coin', 'label' => 'Caja', 'desc' => 'Apertura y cierre de caja'],
+        'gastos' => ['icon' => 'bi-graph-down-arrow', 'label' => 'Gastos', 'desc' => 'Gestionar gastos y ganancias'],
+    ],
+    'Administración'       => [
+        'usuarios'      => ['icon' => 'bi-person-gear', 'label' => 'Usuarios', 'desc' => 'Gestionar usuarios'],
         'configuracion' => ['icon' => 'bi-gear', 'label' => 'Configuración', 'desc' => 'Configurar sistema'],
-        'roles' => ['icon' => 'bi-shield', 'label' => 'Roles', 'desc' => 'Gestionar roles y permisos'],
-        'reportes' => ['icon' => 'bi-graph-up', 'label' => 'Reportes', 'desc' => 'Ver reportes y estadísticas'],
+        'roles'         => ['icon' => 'bi-shield', 'label' => 'Roles', 'desc' => 'Gestionar roles y permisos'],
+        'reportes'      => ['icon' => 'bi-graph-up', 'label' => 'Reportes', 'desc' => 'Ver reportes y estadísticas'],
     ],
-    'General' => [
+    'General'              => [
         'dashboard' => ['icon' => 'bi-speedometer2', 'label' => 'Dashboard', 'desc' => 'Ver panel principal'],
-        '*' => ['icon' => 'bi-key-fill', 'label' => 'Acceso Total', 'desc' => 'Permisos de Super Admin'],
+        '*'         => ['icon' => 'bi-key-fill', 'label' => 'Acceso Total', 'desc' => 'Permisos de Super Admin'],
     ],
-];
+    ];
 
-// Obtener rol
-$id = intval($_GET['id'] ?? 0);
-$rol = $repo->findById($id);
+    // Obtener rol
+    $id  = intval($_GET['id'] ?? 0);
+    $rol = $repo->findById($id);
 
-if (!$rol) {
+    if (! $rol) {
     header('Location: index.php?error=Rol no encontrado');
     exit;
-}
+    }
 
-$permisosActuales = $rol->getPermisosArray();
+    $permisosActuales = $rol->getPermisosArray();
 
-// Procesar formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Procesar formulario
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $rol->permisos = json_encode($_POST['permisos'] ?? []);
-        
+
         if ($repo->save($rol)) {
-            $success = 'Permisos actualizados correctamente';
+            $success          = 'Permisos actualizados correctamente';
             $permisosActuales = $rol->getPermisosArray(); // Recargar
         } else {
             $error = 'Error al actualizar los permisos.';
@@ -58,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
-}
+    }
 
-ob_start();
+    ob_start();
 ?>
 
 <div class="container-fluid">
@@ -121,8 +125,8 @@ ob_start();
             <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; background: linear-gradient(135deg, #eff6ff, #dbeafe);">
                 <div class="card-body text-center">
                     <?php
-                    $totalPermisosDisponibles = array_sum(array_map('count', $permisosPorCategoria));
-                    $porcentaje = $totalPermisosDisponibles > 0 ? round((count($permisosActuales) / $totalPermisosDisponibles) * 100) : 0;
+                        $totalPermisosDisponibles = array_sum(array_map('count', $permisosPorCategoria));
+                        $porcentaje               = $totalPermisosDisponibles > 0 ? round((count($permisosActuales) / $totalPermisosDisponibles) * 100) : 0;
                     ?>
                     <h3 class="fw-bold mb-1 text-primary" id="porcentaje"><?php echo $porcentaje; ?>%</h3>
                     <small class="text-muted">Cobertura</small>
@@ -155,7 +159,7 @@ ob_start();
                     </div>
                 </div>
             </div>
-            
+
             <div class="card-body p-4">
                 <div class="row g-4">
                     <?php foreach ($permisosPorCategoria as $categoria => $permisos): ?>
@@ -168,20 +172,20 @@ ob_start();
                             </div>
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <?php foreach ($permisos as $key => $permiso): 
-                                        $isChecked = in_array($key, $permisosActuales);
+                                    <?php foreach ($permisos as $key => $permiso):
+                                            $isChecked = in_array($key, $permisosActuales);
                                     ?>
                                     <div class="col-md-6 col-lg-3">
-                                        <div class="permiso-card card border-0 shadow-sm h-100 <?php echo $isChecked ? 'selected' : ''; ?>" 
-                                             style="border-radius: 12px; cursor: pointer; transition: all 0.2s;" 
+                                        <div class="permiso-card card border-0 shadow-sm h-100 <?php echo $isChecked ? 'selected' : ''; ?>"
+                                             style="border-radius: 12px; cursor: pointer; transition: all 0.2s;"
                                              onclick="togglePermiso('<?php echo $key; ?>')"
                                              data-categoria="<?php echo $categoria; ?>">
                                             <div class="card-body p-3">
                                                 <div class="d-flex align-items-start">
                                                     <div class="form-check me-3">
-                                                        <input class="form-check-input permiso-check" type="checkbox" 
-                                                               name="permisos[]" value="<?php echo $key; ?>" 
-                                                               id="perm_<?php echo $key; ?>" 
+                                                        <input class="form-check-input permiso-check" type="checkbox"
+                                                               name="permisos[]" value="<?php echo $key; ?>"
+                                                               id="perm_<?php echo $key; ?>"
                                                                style="width: 20px; height: 20px;"
                                                                <?php echo $isChecked ? 'checked' : ''; ?>>
                                                     </div>
@@ -207,7 +211,7 @@ ob_start();
                     <?php endforeach; ?>
                 </div>
             </div>
-            
+
             <div class="card-footer border-top-0 py-4" style="background: #f8f9fa;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -246,7 +250,7 @@ ob_start();
     .card-header {
         background: transparent;
     }
-    
+
     /* Responsive styles */
     @media (max-width: 768px) {
         .roles-header {
@@ -269,7 +273,7 @@ ob_start();
             width: 100%;
         }
     }
-    
+
     @media (max-width: 576px) {
         .roles-header .d-flex.justify-content-between {
             flex-direction: column;
@@ -283,22 +287,22 @@ ob_start();
 
 <script>
     const permisosPorCategoria = <?php echo json_encode($permisosPorCategoria); ?>;
-    
+
     function togglePermiso(key) {
         const checkbox = document.getElementById('perm_' + key);
         const card = checkbox.closest('.permiso-card');
-        
+
         checkbox.checked = !checkbox.checked;
-        
+
         if (checkbox.checked) {
             card.classList.add('selected');
         } else {
             card.classList.remove('selected');
         }
-        
+
         actualizarContadores();
     }
-    
+
     function seleccionarTodos(seleccionar) {
         document.querySelectorAll('.permiso-check').forEach(checkbox => {
             checkbox.checked = seleccionar;
@@ -311,16 +315,16 @@ ob_start();
         });
         actualizarContadores();
     }
-    
+
     function actualizarContadores() {
         const checked = document.querySelectorAll('.permiso-check:checked');
         const total = document.querySelectorAll('.permiso-check').length;
-        
+
         document.getElementById('contadorPermisos').textContent = checked.length;
         document.getElementById('totalPermisos').textContent = checked.length;
         document.getElementById('porcentaje').textContent = Math.round((checked.length / total) * 100) + '%';
     }
-    
+
     // Event listeners
     document.querySelectorAll('.permiso-check').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -333,7 +337,7 @@ ob_start();
             actualizarContadores();
         });
     });
-    
+
     // Confirmación al guardar
     document.getElementById('formPermisos').addEventListener('submit', function(e) {
         const checked = document.querySelectorAll('.permiso-check:checked');
@@ -357,6 +361,6 @@ ob_start();
 </script>
 
 <?php
-$content = ob_get_clean();
-require_once dirname(__DIR__) . '/layouts/main.php';
+    $content = ob_get_clean();
+    require_once dirname(__DIR__) . '/layouts/main.php';
 renderLayout('Permisos: ' . $rol->nombre, $content);
