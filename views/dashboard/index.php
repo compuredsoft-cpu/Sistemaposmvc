@@ -273,6 +273,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
+                        <?php if (SessionManager::hasPermission('ventas')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/ventas/pos.php"
                                 class="btn btn-outline-primary w-100 py-3">
@@ -280,6 +281,8 @@
                                 Nueva Venta
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('compras')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/compras/nueva.php"
                                 class="btn btn-outline-success w-100 py-3">
@@ -287,6 +290,8 @@
                                 Nueva Compra
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('cotizaciones')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/cotizaciones/nueva.php"
                                 class="btn btn-outline-info w-100 py-3">
@@ -294,6 +299,8 @@
                                 Nueva Cotización
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('almacen')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/almacen/nuevo.php"
                                 class="btn btn-outline-warning w-100 py-3">
@@ -301,9 +308,11 @@
                                 Nuevo Producto
                             </a>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <!-- Segunda fila de accesos rápidos -->
                     <div class="row g-3 mt-2">
+                        <?php if (SessionManager::hasPermission('clientes')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/clientes/nuevo.php"
                                 class="btn btn-outline-secondary w-100 py-3">
@@ -311,6 +320,8 @@
                                 Nuevo Cliente
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('proveedores')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/proveedores/nuevo.php"
                                 class="btn btn-outline-dark w-100 py-3">
@@ -318,6 +329,8 @@
                                 Nuevo Proveedor
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('caja')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/caja/apertura.php"
                                 class="btn btn-outline-success w-100 py-3">
@@ -325,6 +338,8 @@
                                 Apertura Caja
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('cuentas_cobrar')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/cuentasxcobrar/index.php"
                                 class="btn btn-outline-danger w-100 py-3">
@@ -332,9 +347,11 @@
                                 Ctas. por Cobrar
                             </a>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <!-- Tercera fila -->
                     <div class="row g-3 mt-2">
+                        <?php if (SessionManager::hasPermission('almacen')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/kardex/index.php"
                                 class="btn btn-outline-primary w-100 py-3">
@@ -342,6 +359,8 @@
                                 Kardex
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('gastos')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/gastos/index.php"
                                 class="btn btn-outline-warning w-100 py-3">
@@ -349,6 +368,8 @@
                                 Gastos
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('ventas')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/ventas/index.php"
                                 class="btn btn-outline-info w-100 py-3">
@@ -356,6 +377,8 @@
                                 Listado Ventas
                             </a>
                         </div>
+                        <?php endif; ?>
+                        <?php if (SessionManager::hasPermission('usuarios')): ?>
                         <div class="col-md-3">
                             <a href="<?php echo SITE_URL; ?>/views/usuarios/index.php"
                                 class="btn btn-outline-secondary w-100 py-3">
@@ -363,6 +386,7 @@
                                 Usuarios
                             </a>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
