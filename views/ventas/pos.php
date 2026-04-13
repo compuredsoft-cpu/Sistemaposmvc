@@ -12,8 +12,8 @@
     $clienteRepo  = new ClienteRepository();
     $cajaRepo     = new CajaRepository();
 
-    // Verificar caja abierta
-    $caja = $cajaRepo->getCajaAbierta(SessionManager::getUserId());
+    // Verificar caja abierta (cualquiera, no solo la del usuario)
+    $caja = $cajaRepo->getAnyCajaAbierta();
     if (! $caja) {
     SessionManager::setFlash('warning', 'Debe abrir una caja primero');
     redirect(SITE_URL . '/views/caja/apertura.php');
