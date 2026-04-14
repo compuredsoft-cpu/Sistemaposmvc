@@ -20,7 +20,7 @@
     }
 
     $error   = '';
-    $success = '';
+    $success = $_GET['success'] ?? '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -107,24 +107,36 @@
             ];
         }, $detalles);
 
-        if ($ventaRepo->save($venta, $detallesArray, SessionManager::getUserId())) {
+        // Log personalizado
+        $logFile = dirname(__DIR__, 2) . '/debug_venta.log';
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - INICIANDO VENTA\n", FILE_APPEND);
+
+        $saveResult = $ventaRepo->save($venta, $detallesArray, SessionManager::getUserId());
+        $logMsg     = date('Y-m-d H:i:s') . " - Resultado save(): " . ($saveResult ? 'true' : 'false') . " - Venta ID: " . ($venta->id ?? 'null') . "\n";
+        file_put_contents($logFile, $logMsg, FILE_APPEND);
+
+        if ($saveResult === true && ! empty($venta->id) && $venta->id > 0) {
             $success = 'Venta realizada exitosamente. Código: ' . $codigo;
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - POS: Venta exitosa - " . $codigo . "\n", FILE_APPEND);
 
             // Si se solicitó imprimir
             if (isset($_POST['imprimir'])) {
                 redirect(SITE_URL . '/views/ventas/ticket.php?id=' . $venta->id . '&imprimir=1');
             }
 
-            // Limpiar formulario
-            $venta = new Venta();
+            // Redirect a la misma página para evitar que F5 cree duplicados (POST-Redirect-GET)
+            redirect(SITE_URL . '/views/ventas/pos.php?success=' . urlencode($success));
         } else {
-            $error = 'Error al guardar la venta';
+            $error = 'Error al guardar la venta. Resultado: ' . var_export($saveResult, true) . ', ID: ' . var_export($venta->id ?? null, true);
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - POS ERROR: " . $error . "\n", FILE_APPEND);
         }
 
     } catch (Exception $e) {
-        $error = $e->getMessage();
+        $error = 'Error: ' . $e->getMessage();
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - ERROR POS: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - TRACE: " . $e->getTraceAsString() . "\n", FILE_APPEND);
     }
-    }
+    } // Cierre del if POST
 
     // Clientes
     $clientes = $clienteRepo->findAllActive();
@@ -270,10 +282,19 @@
                         <?php endif; ?>
 
                         <?php if ($success): ?>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div id="success-alert" class="alert alert-success alert-dismissible fade show" role="alert">
                             <?php echo $success; ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
+                        <script>
+                            setTimeout(function() {
+                                var alert = document.getElementById('success-alert');
+                                if (alert) {
+                                    var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                                    bsAlert.close();
+                                }
+                            }, 5000);
+                        </script>
                         <?php endif; ?>
 
                         <div class="row mb-3">
@@ -537,6 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 cantidadInput.value = nuevaCantidad;
                 calcularFila(row);
+                actualizarStepper();
 
                 // Efecto visual de actualización
                 row.style.backgroundColor = '#d4edda';
@@ -585,6 +607,8 @@ document.addEventListener('DOMContentLoaded', function() {
         detalleIndex++;
         calcularTotales();
 
+        actualizarStepper();
+
         // Eventos para la nueva fila
         row.querySelector('.detalle-cantidad').addEventListener('change', function() {
             if (parseInt(this.value) > stock) {
@@ -604,6 +628,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('emptyMessage').style.display = 'block';
             }
             calcularTotales();
+            actualizarStepper();
         });
     }
 
@@ -797,6 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
         payments = [payment];
         renderizarPagos();
         actualizarResumenPagos();
+        actualizarStepper();
     }
 
     // Renderizar lista de pagos
@@ -951,6 +977,7 @@ document.addEventListener('DOMContentLoaded', function() {
         payments = payments.filter(p => p.id !== id);
         renderizarPagos();
         actualizarResumenPagos();
+        actualizarStepper();
     };
 
     // Calcular total pagado
@@ -993,12 +1020,73 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Función para actualizar el stepper visual según progreso
+    function actualizarStepper() {
+        const tieneProductos = document.querySelectorAll('.detalle-row').length > 0;
+        const tienePago = payments.length > 0;
+        const totalVenta = obtenerTotalVenta();
+        const totalPagado = calcularTotalPagado();
+        const pagoCompleto = totalPagado >= totalVenta && totalVenta > 0;
+
+        // Paso 1: Productos (completado si hay productos)
+        const step1 = document.querySelector('.stepper-item[data-step="1"]');
+        if (tieneProductos) {
+            step1.classList.add('completed');
+            step1.querySelector('.step-counter').style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            step1.querySelector('.step-counter').innerHTML = '<i class="bi bi-check-lg"></i>';
+        } else {
+            step1.classList.remove('completed');
+            step1.querySelector('.step-counter').style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            step1.querySelector('.step-counter').textContent = '1';
+        }
+
+        // Paso 2: Cliente & Pago (activo si hay productos, completado si hay pago)
+        const step2 = document.querySelector('.stepper-item[data-step="2"]');
+        if (tieneProductos) {
+            step2.classList.add('active');
+            step2.querySelector('.step-name').classList.remove('text-muted');
+            step2.querySelector('.step-name').classList.add('text-primary');
+            if (tienePago) {
+                step2.classList.add('completed');
+                step2.querySelector('.step-counter').style.background =
+                    'linear-gradient(135deg, #28a745, #20c997)';
+                step2.querySelector('.step-counter').innerHTML = '<i class="bi bi-check-lg"></i>';
+            } else {
+                step2.querySelector('.step-counter').style.background =
+                    'linear-gradient(135deg, #667eea, #764ba2)';
+                step2.querySelector('.step-counter').textContent = '2';
+            }
+        } else {
+            step2.classList.remove('active', 'completed');
+            step2.querySelector('.step-counter').style.background = '#e9ecef';
+            step2.querySelector('.step-counter').style.color = '#6c757d';
+            step2.querySelector('.step-counter').textContent = '2';
+        }
+
+        // Paso 3: Confirmar (activo cuando pago está completo)
+        const step3 = document.querySelector('.stepper-item[data-step="3"]');
+        if (tieneProductos && tienePago && pagoCompleto) {
+            step3.classList.add('active', 'completed');
+            step3.querySelector('.step-name').classList.remove('text-muted');
+            step3.querySelector('.step-name').classList.add('text-success');
+            step3.querySelector('.step-counter').style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            step3.querySelector('.step-counter').innerHTML = '<i class="bi bi-check-lg"></i>';
+        } else {
+            step3.classList.remove('active', 'completed');
+            step3.querySelector('.step-counter').style.background = '#e9ecef';
+            step3.querySelector('.step-counter').style.color = '#6c757d';
+            step3.querySelector('.step-counter').textContent = '3';
+        }
+    }
+
     // Inicializar
     cargarMetodosPago();
+    actualizarStepper();
 
     // Actualizar cuando cambian los totales
     const observer = new MutationObserver(() => {
         actualizarResumenPagos();
+        actualizarStepper();
     });
 
     observer.observe(document.querySelector('.total-display'), {

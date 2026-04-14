@@ -3,6 +3,12 @@
  * Repositorio de Ventas
  */
 
+function debugLog($msg)
+{
+    $logFile = dirname(__DIR__, 2) . '/debug_venta.log';
+    file_put_contents($logFile, date('Y-m-d H:i:s') . ' - ' . $msg . "\n", FILE_APPEND);
+}
+
 class VentaRepository extends BaseRepository
 {
     protected string $table = 'ventas';
@@ -34,13 +40,10 @@ class VentaRepository extends BaseRepository
 
     public function save(Venta $venta, array $detalles = [], ?int $usuarioId = null): bool
     {
-        $inTransaction = false;
+        debugLog("VentaRepository::save() - INICIO. Venta ID actual: " . ($venta->id ?? 'null'));
         try {
-            // Verificar si ya hay una transacción activa
-            if (! $this->db->inTransaction()) {
-                $this->db->beginTransaction();
-                $inTransaction = true;
-            }
+            $this->db->beginTransaction();
+            debugLog("VentaRepository::save() - Transaction iniciada");
 
             if ($venta->id) {
                 $sql = "UPDATE {$this->table} SET cliente_id = ?, caja_id = ?, subtotal = ?,
@@ -70,14 +73,26 @@ class VentaRepository extends BaseRepository
             }
 
             $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
+            debugLog("VentaRepository::save() - SQL preparado, ejecutando...");
+            $result = $stmt->execute($params);
+            debugLog("VentaRepository::save() - Execute resultado: " . var_export($result, true));
+
+            if (! $result) {
+                throw new Exception("Error al ejecutar INSERT de venta: " . implode(', ', $stmt->errorInfo()));
+            }
 
             if (! $venta->id) {
                 $venta->id = (int) $this->db->lastInsertId();
+                debugLog("VentaRepository::save() - lastInsertId: " . $venta->id);
+                if (! $venta->id) {
+                    throw new Exception("No se pudo obtener el ID de la venta insertada");
+                }
             }
 
             // Guardar detalles
+            debugLog("VentaRepository::save() - Procesando detalles...");
             if (! empty($detalles)) {
+                debugLog("VentaRepository::save() - Cantidad de detalles: " . count($detalles));
                 // Eliminar detalles existentes
                 $this->db->prepare("DELETE FROM ventas_detalle WHERE venta_id = ?")->execute([$venta->id]);
 
@@ -91,12 +106,8 @@ class VentaRepository extends BaseRepository
                         $detalle['precio_unitario'], $detalle['subtotal'],
                     ]);
 
-                    // Descontar stock
+                    // Descontar stock y registrar en kardex (KardexRepository maneja ambos)
                     if ($venta->estado === 'COMPLETADA') {
-                        $this->db->prepare("UPDATE productos SET stock_actual = stock_actual - ? WHERE id = ?")
-                            ->execute([$detalle['cantidad'], $detalle['producto_id']]);
-
-                        // Registrar en kardex
                         $kardexRepo = new KardexRepository();
                         $kardexRepo->registrarMovimiento(
                             $detalle['producto_id'],
@@ -137,17 +148,16 @@ class VentaRepository extends BaseRepository
                 $this->actualizarCaja($venta);
             }
 
-            if ($inTransaction) {
-                $this->db->commit();
-            }
+            $this->db->commit();
+            debugLog("VentaRepository::save() - Commit exitoso. Venta ID: " . $venta->id);
             return true;
 
         } catch (Exception $e) {
-            if ($inTransaction && $this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            error_log("Error en VentaRepository::save: " . $e->getMessage());
-            throw $e;
+            debugLog("VentaRepository::save() - EXCEPTION: " . $e->getMessage());
+            debugLog("VentaRepository::save() - TRACE: " . $e->getTraceAsString());
+            $this->db->rollBack();
+            debugLog("VentaRepository::save() - Rollback ejecutado");
+            return false;
         }
     }
 
@@ -339,8 +349,8 @@ class VentaRepository extends BaseRepository
                                     SUM(CASE WHEN metodo_pago = 'EFECTIVO' THEN total ELSE 0 END) as efectivo,
                                     SUM(CASE WHEN metodo_pago = 'TARJETA' THEN total ELSE 0 END) as tarjeta,
                                     SUM(CASE WHEN metodo_pago = 'TRANSFERENCIA' THEN total ELSE 0 END) as transferencia
-                                   FROM {$this->table}
-                                   WHERE DATE(fecha) = ? AND estado = 'COMPLETADA'");
+                                FROM {$this->table}
+                                WHERE DATE(fecha) = ? AND estado = 'COMPLETADA'");
         $stmt->execute([$hoy]);
         return $stmt->fetch();
     }
