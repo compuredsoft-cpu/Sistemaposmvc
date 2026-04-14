@@ -37,6 +37,19 @@
         }
         $codigo = generateCode($config->prefijo_factura, $numero);
 
+        // Extraer método de pago del JSON de pagos o usar campo simple
+        $metodoPago = 'efectivo';
+        if (! empty($_POST['pagos_json'])) {
+            $pagos = json_decode($_POST['pagos_json'], true);
+            if (! empty($pagos[0]['metodo_codigo'])) {
+                $metodoPago = $pagos[0]['metodo_codigo'];
+            } elseif (! empty($pagos[0]['metodo_nombre'])) {
+                $metodoPago = strtolower($pagos[0]['metodo_nombre']);
+            }
+        } elseif (! empty($_POST['metodo_pago'])) {
+            $metodoPago = $_POST['metodo_pago'];
+        }
+
         // Crear venta
         $venta                      = new Venta();
         $venta->codigo              = $codigo;
@@ -45,7 +58,7 @@
         $venta->caja_id             = $caja->id;
         $venta->impuesto_porcentaje = floatval($_POST['impuesto_porcentaje'] ?? $config->impuesto_porcentaje);
         $venta->descuento           = floatval($_POST['descuento'] ?? 0);
-        $venta->metodo_pago         = $_POST['metodo_pago'];
+        $venta->metodo_pago         = $metodoPago;
         $venta->estado              = 'COMPLETADA';
         $venta->observaciones       = $_POST['observaciones'] ?? null;
         $venta->es_credito          = isset($_POST['es_credito']) ? 1 : 0;

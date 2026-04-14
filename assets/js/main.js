@@ -55,6 +55,35 @@ $(document).ready(function() {
         });
     });
     
+    // Funciones helper para alertas modernas
+    window.showToast = function(title, icon = 'success', timer = 3000) {
+        Swal.fire({
+            title: title,
+            icon: icon,
+            timer: timer,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end',
+            customClass: {
+                popup: 'colored-toast'
+            }
+        });
+    };
+    
+    window.showConfirm = function(options) {
+        return Swal.fire({
+            title: options.title || '¿Está seguro?',
+            text: options.text || '',
+            icon: options.icon || 'warning',
+            showCancelButton: true,
+            confirmButtonColor: options.confirmButtonColor || '#3085d6',
+            cancelButtonColor: options.cancelButtonColor || '#d33',
+            confirmButtonText: options.confirmButtonText || 'Sí',
+            cancelButtonText: options.cancelButtonText || 'Cancelar'
+        });
+    };
+    
     // Formatear moneda
     $('.moneda').on('input', function() {
         let value = $(this).val().replace(/[^\d]/g, '');

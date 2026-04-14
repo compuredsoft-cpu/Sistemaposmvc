@@ -1,40 +1,40 @@
 <?php
-/**
+    /**
  * Nueva Compra
  */
-require_once dirname(__DIR__, 2) . '/config/config.php';
-SessionManager::requirePermission('compras');
+    require_once dirname(__DIR__, 2) . '/config/config.php';
+    SessionManager::requirePermission('compras');
 
-$repo = new CompraRepository();
-$proveedorRepo = new ProveedorRepository();
-$productoRepo = new ProductoRepository();
+    $repo          = new CompraRepository();
+    $proveedorRepo = new ProveedorRepository();
+    $productoRepo  = new ProductoRepository();
 
-$error = '';
+    $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $compra = new Compra();
-    $compra->proveedor_id = intval($_POST['proveedor_id'] ?? 0);
-    $compra->fecha = $_POST['fecha'] ?? date('Y-m-d');
-    $compra->metodo_pago = $_POST['metodo_pago'] ?? 'EFECTIVO';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $compra                = new Compra();
+    $compra->proveedor_id  = intval($_POST['proveedor_id'] ?? 0);
+    $compra->fecha         = $_POST['fecha'] ?? date('Y-m-d');
+    $compra->metodo_pago   = $_POST['metodo_pago'] ?? 'EFECTIVO';
     $compra->observaciones = $_POST['observaciones'] ?? null;
-    $compra->estado = 'RECIBIDA';
-    
+    $compra->estado        = 'RECIBIDA';
+
     // Procesar detalles
-    $productos = $_POST['producto_id'] ?? [];
+    $productos  = $_POST['producto_id'] ?? [];
     $cantidades = $_POST['cantidad'] ?? [];
-    $precios = $_POST['precio_unitario'] ?? [];
-    
+    $precios    = $_POST['precio_unitario'] ?? [];
+
     for ($i = 0; $i < count($productos); $i++) {
-        if (!empty($productos[$i]) && $cantidades[$i] > 0) {
-            $detalle = new CompraDetalle();
-            $detalle->producto_id = intval($productos[$i]);
-            $detalle->cantidad = intval($cantidades[$i]);
+        if (! empty($productos[$i]) && $cantidades[$i] > 0) {
+            $detalle                  = new CompraDetalle();
+            $detalle->producto_id     = intval($productos[$i]);
+            $detalle->cantidad        = intval($cantidades[$i]);
             $detalle->precio_unitario = floatval($precios[$i]);
             $detalle->calcularSubtotal();
             $compra->detalles[] = $detalle;
         }
     }
-    
+
     if ($compra->proveedor_id <= 0) {
         $error = 'Debe seleccionar un proveedor';
     } elseif (empty($compra->detalles)) {
@@ -42,15 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $compra->calcularTotales();
         $compra->usuario_creador = SessionManager::getUserId();
-        
+
         // Convertir detalles a arrays
         $detallesArray = array_map(fn($d) => [
-            'producto_id' => $d->producto_id,
-            'cantidad' => $d->cantidad,
+            'producto_id'     => $d->producto_id,
+            'cantidad'        => $d->cantidad,
             'precio_unitario' => $d->precio_unitario,
-            'subtotal' => $d->subtotal
+            'subtotal'        => $d->subtotal,
         ], $compra->detalles);
-        
+
         if ($repo->save($compra, $detallesArray)) {
             SessionManager::setFlash('success', 'Compra registrada correctamente: ' . $compra->codigo);
             redirect(SITE_URL . '/views/compras/index.php');
@@ -58,17 +58,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Error al registrar la compra';
         }
     }
-}
+    }
 
-$proveedores = $proveedorRepo->findAllActive();
-$productosData = $productoRepo->findAllWithCategories([], 'p.nombre ASC', 1, 1000);
-$productos = $productosData['items'] ?? [];
+    $proveedores   = $proveedorRepo->findAllActive();
+    $productosData = $productoRepo->findAllWithCategories([], 'p.nombre ASC', 1, 1000);
+    $productos     = $productosData['items'] ?? [];
 
-// Generar código sugerido
-$ultimoId = $repo->count() + 1;
-$codigoSugerido = 'COM' . str_pad((string)$ultimoId, 6, '0', STR_PAD_LEFT);
+    // Generar código sugerido
+    $ultimoId       = $repo->count() + 1;
+    $codigoSugerido = 'COM' . str_pad((string) $ultimoId, 6, '0', STR_PAD_LEFT);
 
-ob_start();
+    ob_start();
 ?>
 
 <!-- Header Moderno -->
@@ -88,14 +88,14 @@ ob_start();
             </div>
         </div>
     </div>
-    
+
     <?php if ($error): ?>
     <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert" style="border: none; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white;">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i><strong>Error:</strong> <?php echo $error; ?>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
-    
+
     <form method="POST" action="" id="formCompra">
         <!-- Datos de la compra -->
         <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px; overflow: hidden;">
@@ -138,7 +138,7 @@ ob_start();
                 </div>
             </div>
         </div>
-        
+
         <!-- Productos -->
         <div class="card border-0 shadow-lg mb-4" style="border-radius: 20px; overflow: hidden;">
             <div class="card-header border-0 py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #11998e20, #38ef7d20);">
@@ -173,7 +173,7 @@ ob_start();
                 </div>
             </div>
         </div>
-        
+
         <div class="d-flex justify-content-between align-items-center py-3">
             <a href="index.php" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
                 <i class="bi bi-x-circle me-2"></i>Cancelar
@@ -230,7 +230,7 @@ function eliminarFila(btn) {
         btn.closest('tr').remove();
         calcularTotal();
     } else {
-        alert('Debe tener al menos un producto');
+        showToast('Debe tener al menos un producto', 'warning');
     }
 }
 
@@ -267,6 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php
-$content = ob_get_clean();
-require_once dirname(__DIR__) . '/layouts/main.php';
+    $content = ob_get_clean();
+    require_once dirname(__DIR__) . '/layouts/main.php';
 renderLayout('Nueva Compra', $content);

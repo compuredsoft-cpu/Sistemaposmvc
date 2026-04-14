@@ -1,94 +1,99 @@
 <?php
-/**
+    /**
  * Cierre de Caja
  */
-require_once dirname(__DIR__, 2) . '/config/config.php';
-SessionManager::requirePermission('caja');
+    require_once dirname(__DIR__, 2) . '/config/config.php';
+    SessionManager::requirePermission('caja');
 
-$cajaRepo = new CajaRepository();
-$usuario = SessionManager::getUserData();
-$usuarioId = SessionManager::getUserId();
+    $cajaRepo  = new CajaRepository();
+    $usuario   = SessionManager::getUserData();
+    $usuarioId = SessionManager::getUserId();
 
-// Verificar que hay una caja abierta
-$caja = $cajaRepo->getCajaAbierta($usuarioId);
+    // Verificar que hay una caja abierta
+    $caja = $cajaRepo->getAnyCajaAbierta();
 
-if (!$caja) {
+    if (! $caja) {
     header('Location: index.php?error=No hay caja abierta para cerrar');
     exit;
-}
+    }
 
-$error = '';
-$success = '';
+    $error   = '';
+    $success = '';
 
-// Obtener resumen de ventas por método de pago
-$db = Database::getConnection();
-$ventasStmt = $db->prepare("
-    SELECT 
-        metodo_pago, 
-        COUNT(*) as cantidad, 
-        SUM(total) as total 
-    FROM ventas 
-    WHERE caja_id = ? AND estado = 'COMPLETADA' 
+    // Obtener resumen de ventas por método de pago
+    $db         = Database::getConnection();
+    $ventasStmt = $db->prepare("
+    SELECT
+        metodo_pago,
+        COUNT(*) as cantidad,
+        SUM(total) as total
+    FROM ventas
+    WHERE caja_id = ? AND estado = 'COMPLETADA'
     GROUP BY metodo_pago
 ");
-$ventasStmt->execute([$caja->id]);
-$ventasPorMetodo = $ventasStmt->fetchAll();
+    $ventasStmt->execute([$caja->id]);
+    $ventasPorMetodo = $ventasStmt->fetchAll();
 
-// Calcular totales
-$totalEfectivo = 0;
-$totalTarjeta = 0;
-$totalTransferencia = 0;
-$totalCheque = 0;
-$totalCredito = 0;
-$totalVentas = 0;
+    // Calcular totales
+    $totalEfectivo      = 0;
+    $totalTarjeta       = 0;
+    $totalTransferencia = 0;
+    $totalCheque        = 0;
+    $totalCredito       = 0;
+    $totalVentas        = 0;
 
-foreach ($ventasPorMetodo as $v) {
+    foreach ($ventasPorMetodo as $v) {
     $totalVentas += $v['total'];
     switch ($v['metodo_pago']) {
-        case 'EFECTIVO': $totalEfectivo += $v['total']; break;
-        case 'TARJETA': $totalTarjeta += $v['total']; break;
-        case 'TRANSFERENCIA': $totalTransferencia += $v['total']; break;
-        case 'CHEQUE': $totalCheque += $v['total']; break;
-        case 'CREDITO': $totalCredito += $v['total']; break;
+        case 'EFECTIVO':$totalEfectivo += $v['total'];
+            break;
+        case 'TARJETA':$totalTarjeta += $v['total'];
+            break;
+        case 'TRANSFERENCIA':$totalTransferencia += $v['total'];
+            break;
+        case 'CHEQUE':$totalCheque += $v['total'];
+            break;
+        case 'CREDITO':$totalCredito += $v['total'];
+            break;
     }
-}
+    }
 
-// Obtener gastos e ingresos
-$gastosStmt = $db->prepare("
-    SELECT 
-        tipo, 
-        SUM(monto) as total 
-    FROM gastos 
-    WHERE caja_id = ? AND estado = 1 
+    // Obtener gastos e ingresos
+    $gastosStmt  = $db->prepare("
+    SELECT
+        tipo,
+        SUM(monto) as total
+    FROM gastos
+    WHERE caja_id = ? AND estado = 1
     GROUP BY tipo
 ");
-$gastosStmt->execute([$caja->id]);
-$movimientos = $gastosStmt->fetchAll();
+    $gastosStmt->execute([$caja->id]);
+    $movimientos  = $gastosStmt->fetchAll();
 
-$totalGastos = 0;
-$totalIngresos = 0;
+    $totalGastos   = 0;
+    $totalIngresos = 0;
 
-foreach ($movimientos as $m) {
+    foreach ($movimientos as $m) {
     if ($m['tipo'] == 'GASTO') {
         $totalGastos += $m['total'];
     } else {
         $totalIngresos += $m['total'];
     }
-}
+    }
 
-// Calcular totales esperados
-$efectivoEsperado = $caja->monto_apertura + $totalEfectivo - $totalGastos;
+    // Calcular totales esperados
+    $efectivoEsperado = $caja->monto_apertura + $totalEfectivo - $totalGastos;
 
-// Procesar cierre
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Procesar cierre
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $caja->monto_cierre = floatval($_POST['monto_cierre'] ?? 0);
+        $caja->monto_cierre         = floatval($_POST['monto_cierre'] ?? 0);
         $caja->observaciones_cierre = $_POST['observaciones_cierre'] ?? null;
-        
+
         if ($caja->monto_cierre < 0) {
             throw new Exception('El monto de cierre no puede ser negativo');
         }
-        
+
         if ($cajaRepo->cerrarCaja($caja)) {
             header('Location: index.php?success=Caja cerrada correctamente');
             exit;
@@ -98,9 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
-}
+    }
 
-ob_start();
+    ob_start();
 ?>
 
 <div class="container-fluid">
@@ -219,20 +224,20 @@ ob_start();
                             <small class="text-muted">Monto Apertura + Ventas Efectivo - Gastos</small>
                         </div>
                     </div>
-                    
+
                     <!-- Monto Real -->
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Efectivo en Caja <span class="text-danger">*</span></label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-currency-dollar text-danger fs-4"></i></span>
-                            <input type="number" name="monto_cierre" id="montoCierre" class="form-control border-0 shadow-none fs-4" 
-                                   style="border-radius: 0 12px 12px 0; background: #f8f9fa;" 
-                                   step="0.01" min="0" required placeholder="0.00" 
+                            <input type="number" name="monto_cierre" id="montoCierre" class="form-control border-0 shadow-none fs-4"
+                                   style="border-radius: 0 12px 12px 0; background: #f8f9fa;"
+                                   step="0.01" min="0" required placeholder="0.00"
                                    value="<?php echo number_format($efectivoEsperado, 2, '.', ''); ?>">
                         </div>
                         <small class="text-muted">Ingrese el monto real contado en caja</small>
                     </div>
-                    
+
                     <!-- Diferencia -->
                     <div class="col-md-4">
                         <div class="p-4 border rounded-3 h-100" id="diferenciaBox" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
@@ -241,14 +246,14 @@ ob_start();
                             <small class="text-muted" id="diferenciaTexto">Sin diferencia</small>
                         </div>
                     </div>
-                    
+
                     <!-- Observaciones -->
                     <div class="col-12">
                         <label class="form-label fw-bold">Observaciones del Cierre</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-chat-text text-danger"></i></span>
-                            <textarea name="observaciones_cierre" class="form-control border-0 shadow-none" 
-                                      style="border-radius: 0 12px 12px 0; background: #f8f9fa;" rows="3" 
+                            <textarea name="observaciones_cierre" class="form-control border-0 shadow-none"
+                                      style="border-radius: 0 12px 12px 0; background: #f8f9fa;" rows="3"
                                       placeholder="Notas sobre el cierre, diferencias encontradas, etc..."></textarea>
                         </div>
                     </div>
@@ -260,7 +265,7 @@ ob_start();
                         <i class="bi bi-info-circle me-1"></i>
                         Una vez cerrada, la caja no podrá reabrirse. Asegúrese de contar correctamente el efectivo.
                     </div>
-                    <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5" onclick="return confirmarCierre()">
+                    <button type="button" id="btnCerrarCaja" class="btn btn-danger btn-lg rounded-pill px-5">
                         <i class="bi bi-x-circle me-2"></i>Cerrar Caja
                     </button>
                 </div>
@@ -284,17 +289,17 @@ ob_start();
 
 <script>
     const efectivoEsperado = <?php echo $efectivoEsperado; ?>;
-    
+
     function calcularDiferencia() {
         const montoCierre = parseFloat(document.getElementById('montoCierre').value) || 0;
         const diferencia = montoCierre - efectivoEsperado;
-        
+
         const diferenciaValor = document.getElementById('diferenciaValor');
         const diferenciaTexto = document.getElementById('diferenciaTexto');
         const diferenciaBox = document.getElementById('diferenciaBox');
-        
+
         diferenciaValor.textContent = (diferencia >= 0 ? '+' : '') + '$' + Math.abs(diferencia).toLocaleString('es-CO', {minimumFractionDigits: 2});
-        
+
         if (diferencia === 0) {
             diferenciaValor.className = 'fw-bold mb-0 text-success';
             diferenciaTexto.textContent = 'Sin diferencia ✓';
@@ -309,26 +314,37 @@ ob_start();
             diferenciaBox.style.background = 'linear-gradient(135deg, #fef2f2, #fee2e2)';
         }
     }
-    
-    function confirmarCierre() {
+
+    document.getElementById('btnCerrarCaja').addEventListener('click', function() {
         const montoCierre = parseFloat(document.getElementById('montoCierre').value) || 0;
         const diferencia = montoCierre - efectivoEsperado;
-        
-        let mensaje = '¿Está seguro de cerrar la caja?';
+
+        let texto = 'Esta acción no se puede deshacer.';
         if (diferencia !== 0) {
-            mensaje += '\n\nDiferencia detectada: ' + (diferencia > 0 ? 'Sobrante' : 'Faltante') + ' de $' + Math.abs(diferencia).toLocaleString('es-CO', {minimumFractionDigits: 2});
+            texto = 'Diferencia detectada: ' + (diferencia > 0 ? 'Sobrante' : 'Faltante') + ' de $' + Math.abs(diferencia).toLocaleString('es-CO', {minimumFractionDigits: 2}) + '\n\n' + texto;
         }
-        mensaje += '\n\nEsta acción no se puede deshacer.';
-        
-        return confirm(mensaje);
-    }
-    
+
+        showConfirm({
+            title: '¿Está seguro de cerrar la caja?',
+            text: texto,
+            icon: 'warning',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, cerrar caja',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('formCierre').submit();
+            }
+        });
+    });
+
     // Calcular diferencia al cargar y al cambiar
     document.getElementById('montoCierre').addEventListener('input', calcularDiferencia);
     document.addEventListener('DOMContentLoaded', calcularDiferencia);
 </script>
 
 <?php
-$content = ob_get_clean();
-require_once dirname(__DIR__) . '/layouts/main.php';
+    $content  = ob_get_clean();
+    require_once dirname(__DIR__) . '/layouts/main.php';
 renderLayout('Cierre de Caja #' . $caja->id, $content);
