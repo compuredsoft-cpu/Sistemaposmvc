@@ -10,19 +10,19 @@ ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
 // Capturar errores no manejados
-set_error_handler(function($severity, $message, $file, $line) {
+set_error_handler(function ($severity, $message, $file, $line) {
     error_log("PHP Error [$severity]: $message in $file:$line");
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
-set_exception_handler(function($e) {
+set_exception_handler(function ($e) {
     error_log("Uncaught Exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     header('Content-Type: application/json; charset=utf-8');
+    // En producción, no exponer detalles internos
+    $isDev = defined('APP_ENV') && APP_ENV === 'development';
     echo json_encode([
-        'success' => false, 
-        'message' => 'Error interno: ' . $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine()
+        'success' => false,
+        'message' => $isDev ? $e->getMessage() : 'Error interno del servidor',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 });
@@ -30,7 +30,7 @@ set_exception_handler(function($e) {
 require_once __DIR__ . '/config/config.php';
 
 // Capturar errores fatales
-register_shutdown_function(function() {
+register_shutdown_function(function () {
     $error = error_get_last();
     if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE)) {
         header('Content-Type: application/json');
@@ -54,8 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Función helper para respuestas JSON
-if (!function_exists('jsonResponse')) {
-    function jsonResponse(array $data, int $statusCode = 200): void {
+if (! function_exists('jsonResponse')) {
+    function jsonResponse(array $data, int $statusCode = 200): void
+    {
         http_response_code($statusCode);
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
@@ -70,16 +71,16 @@ $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 $debugInfo = [
     'request_uri' => $requestUri,
     'script_name' => $scriptName,
-    'base_path' => dirname($scriptName)
+    'base_path'   => dirname($scriptName),
 ];
 
 // Extraer el path después de api.php
 $basePath = dirname($scriptName);
-$path = str_replace($basePath, '', $requestUri);
+$path     = str_replace($basePath, '', $requestUri);
 
 // Manejar query strings
 $pathParts = explode('?', $path);
-$path = $pathParts[0];
+$path      = $pathParts[0];
 
 $path = preg_replace('/^\/api\.php/', '', $path);
 $path = preg_replace('/^\//', '', $path);
@@ -91,8 +92,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 // Parsear el path
 $segments = explode('/', $path);
 $resource = $segments[0] ?? '';
-$action = $segments[1] ?? '';
-$id = $segments[2] ?? null;
+$action   = $segments[1] ?? '';
+$id       = $segments[2] ?? null;
 
 // Log para debugging
 error_log("API Request: $method /$path - Resource: $resource, Action: $action, Debug: " . json_encode($debugInfo));
@@ -105,15 +106,15 @@ try {
         __DIR__ . '/models/repositories/PaymentRepository.php',
         __DIR__ . '/models/entities/MetodoPago.php',
         __DIR__ . '/models/entities/VentaPago.php',
-        __DIR__ . '/services/PaymentGatewayService.php'
+        __DIR__ . '/services/PaymentGatewayService.php',
     ];
-    
+
     foreach ($requiredFiles as $file) {
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             throw new Exception("Archivo no encontrado: " . basename($file));
         }
     }
-    
+
     // Instanciar controlador de pagos
     $paymentController = new PaymentController();
 } catch (Exception $e) {
@@ -127,7 +128,7 @@ switch ($resource) {
         // Endpoint de prueba
         jsonResponse(['success' => true, 'message' => 'API funcionando', 'version' => '1.0']);
         break;
-        
+
     case 'test':
         // Test de conexión a base de datos
         try {
@@ -137,11 +138,11 @@ switch ($resource) {
             jsonResponse(['success' => false, 'message' => 'Error BD: ' . $e->getMessage()], 500);
         }
         break;
-        
+
     case 'pagos':
         handlePagosRoutes($method, $action, $id, $paymentController);
         break;
-        
+
     default:
         jsonResponse(['success' => false, 'message' => 'Ruta no encontrada: ' . $resource], 404);
 }
@@ -149,13 +150,14 @@ switch ($resource) {
 /**
  * Manejar rutas de pagos
  */
-function handlePagosRoutes(string $method, string $action, ?string $id, PaymentController $controller): void {
+function handlePagosRoutes(string $method, string $action, ?string $id, PaymentController $controller): void
+{
     // Si no hay acción, asumir que es la ruta base
     if (empty($action)) {
         jsonResponse(['success' => false, 'message' => 'Acción no especificada'], 400);
         return;
     }
-    
+
     switch ($action) {
         case 'metodos':
             if ($method === 'GET') {
@@ -169,19 +171,19 @@ function handlePagosRoutes(string $method, string $action, ?string $id, PaymentC
                 jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
             }
             break;
-            
+
         case 'procesar':
             if ($method === 'POST') {
                 $controller->procesarPagos();
             }
             break;
-            
+
         case 'venta':
             if ($method === 'GET' && $id) {
                 $controller->getPagosByVenta((int) $id);
             }
             break;
-            
+
         case 'wompi':
             if ($method === 'POST') {
                 if ($id === 'webhook') {
@@ -191,7 +193,7 @@ function handlePagosRoutes(string $method, string $action, ?string $id, PaymentC
                 }
             }
             break;
-            
+
         case 'placetopay':
             if ($method === 'POST') {
                 if ($id === 'webhook') {
@@ -201,7 +203,7 @@ function handlePagosRoutes(string $method, string $action, ?string $id, PaymentC
                 }
             }
             break;
-            
+
         case 'qr':
             if ($method === 'POST' && $id === 'generar') {
                 $controller->generarQR();
@@ -209,19 +211,19 @@ function handlePagosRoutes(string $method, string $action, ?string $id, PaymentC
                 $controller->verificarEstadoQR((int) $id);
             }
             break;
-            
+
         case 'devolucion':
             if ($method === 'POST') {
                 $controller->procesarDevolucion();
             }
             break;
-            
+
         case 'cuentas-bancarias':
             if ($method === 'GET') {
                 $controller->getCuentasBancarias();
             }
             break;
-            
+
         default:
             jsonResponse(['success' => false, 'message' => 'Acción no encontrada: ' . $action], 404);
     }

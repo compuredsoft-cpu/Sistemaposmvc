@@ -283,7 +283,7 @@
 
                         <?php if ($success): ?>
                         <div id="success-alert" class="alert alert-success alert-dismissible fade show" role="alert">
-                            <?php echo $success; ?>
+                            <?php echo htmlspecialchars($success, ENT_QUOTES, 'UTF-8'); ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                         <script>

@@ -127,9 +127,9 @@
                         <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-tag text-primary"></i></span>
                         <select name="estado" class="form-select border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;">
                             <option value="">Todos</option>
-                            <option value="COMPLETADA" <?php echo($_GET['estado'] ?? '') === 'COMPLETADA' ? 'selected' : ''; ?>>Completada</option>
-                            <option value="PENDIENTE" <?php echo($_GET['estado'] ?? '') === 'PENDIENTE' ? 'selected' : ''; ?>>Pendiente</option>
-                            <option value="CANCELADA" <?php echo($_GET['estado'] ?? '') === 'CANCELADA' ? 'selected' : ''; ?>>Cancelada</option>
+                            <option value="COMPLETADA" <?php echo(htmlspecialchars($_GET['estado'] ?? '', ENT_QUOTES, 'UTF-8')) === 'COMPLETADA' ? 'selected' : ''; ?>>Completada</option>
+                            <option value="PENDIENTE" <?php echo(htmlspecialchars($_GET['estado'] ?? '', ENT_QUOTES, 'UTF-8')) === 'PENDIENTE' ? 'selected' : ''; ?>>Pendiente</option>
+                            <option value="CANCELADA" <?php echo(htmlspecialchars($_GET['estado'] ?? '', ENT_QUOTES, 'UTF-8')) === 'CANCELADA' ? 'selected' : ''; ?>>Cancelada</option>
                         </select>
                     </div>
                 </div>
@@ -139,10 +139,10 @@
                         <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-credit-card text-primary"></i></span>
                         <select name="metodo_pago" class="form-select border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;">
                             <option value="">Todos</option>
-                            <option value="EFECTIVO" <?php echo($_GET['metodo_pago'] ?? '') === 'EFECTIVO' ? 'selected' : ''; ?>>Efectivo</option>
-                            <option value="TARJETA" <?php echo($_GET['metodo_pago'] ?? '') === 'TARJETA' ? 'selected' : ''; ?>>Tarjeta</option>
-                            <option value="TRANSFERENCIA" <?php echo($_GET['metodo_pago'] ?? '') === 'TRANSFERENCIA' ? 'selected' : ''; ?>>Transferencia</option>
-                            <option value="CREDITO" <?php echo($_GET['metodo_pago'] ?? '') === 'CREDITO' ? 'selected' : ''; ?>>Crédito</option>
+                            <option value="EFECTIVO" <?php echo(htmlspecialchars($_GET['metodo_pago'] ?? '', ENT_QUOTES, 'UTF-8')) === 'EFECTIVO' ? 'selected' : ''; ?>>Efectivo</option>
+                            <option value="TARJETA" <?php echo(htmlspecialchars($_GET['metodo_pago'] ?? '', ENT_QUOTES, 'UTF-8')) === 'TARJETA' ? 'selected' : ''; ?>>Tarjeta</option>
+                            <option value="TRANSFERENCIA" <?php echo(htmlspecialchars($_GET['metodo_pago'] ?? '', ENT_QUOTES, 'UTF-8')) === 'TRANSFERENCIA' ? 'selected' : ''; ?>>Transferencia</option>
+                            <option value="CREDITO" <?php echo(htmlspecialchars($_GET['metodo_pago'] ?? '', ENT_QUOTES, 'UTF-8')) === 'CREDITO' ? 'selected' : ''; ?>>Crédito</option>
                         </select>
                     </div>
                 </div>
@@ -150,21 +150,21 @@
                     <label class="form-label fw-bold small">Desde</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-calendar text-primary"></i></span>
-                        <input type="date" name="fecha_desde" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" value="<?php echo $_GET['fecha_desde'] ?? ''; ?>">
+                        <input type="date" name="fecha_desde" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" value="<?php echo htmlspecialchars($_GET['fecha_desde'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label fw-bold small">Hasta</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-calendar-check text-primary"></i></span>
-                        <input type="date" name="fecha_hasta" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" value="<?php echo $_GET['fecha_hasta'] ?? ''; ?>">
+                        <input type="date" name="fecha_hasta" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" value="<?php echo htmlspecialchars($_GET['fecha_hasta'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label fw-bold small">Búsqueda</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-search text-primary"></i></span>
-                        <input type="text" name="busqueda" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" placeholder="Código, cliente..." value="<?php echo $_GET['busqueda'] ?? ''; ?>">
+                        <input type="text" name="busqueda" class="form-control border-0 shadow-none" style="border-radius: 0 12px 12px 0; background: #f8f9fa;" placeholder="Código, cliente..." value="<?php echo htmlspecialchars($_GET['busqueda'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 </div>
                 <div class="col-12 col-md-2 d-flex align-items-end">
