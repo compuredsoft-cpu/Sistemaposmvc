@@ -75,12 +75,12 @@
 
         foreach ($productos as $i => $productoId) {
             if ($productoId) {
-                $detalles[] = [
-                    'producto_id'     => $productoId,
-                    'cantidad'        => intval($cantidades[$i]),
-                    'precio_unitario' => floatval($precios[$i]),
-                    'subtotal'        => intval($cantidades[$i]) * floatval($precios[$i]),
-                ];
+                $detalle                  = new VentaDetalle();
+                $detalle->producto_id     = $productoId;
+                $detalle->cantidad        = intval($cantidades[$i]);
+                $detalle->precio_unitario = floatval($precios[$i]);
+                $detalle->subtotal        = $detalle->cantidad * $detalle->precio_unitario;
+                $detalles[]               = $detalle;
             }
         }
 
@@ -97,7 +97,17 @@
             $venta->fecha_vencimiento = date('Y-m-d', strtotime("+{$venta->cuotas} months"));
         }
 
-        if ($ventaRepo->save($venta, $detalles, SessionManager::getUserId())) {
+        // Convertir objetos a arrays para el repositorio
+        $detallesArray = array_map(function ($d) {
+            return [
+                'producto_id'     => $d->producto_id,
+                'cantidad'        => $d->cantidad,
+                'precio_unitario' => $d->precio_unitario,
+                'subtotal'        => $d->subtotal,
+            ];
+        }, $detalles);
+
+        if ($ventaRepo->save($venta, $detallesArray, SessionManager::getUserId())) {
             $success = 'Venta realizada exitosamente. Código: ' . $codigo;
 
             // Si se solicitó imprimir
